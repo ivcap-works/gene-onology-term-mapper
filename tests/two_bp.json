@@ -1,0 +1,8 @@
+{
+  "$schema": "urn:sd:schema.gene-ontology-term-mapper.request.1",
+  "ids": [
+    "P12345",
+    "Q9H0H5"
+  ],
+  "category": "BP"
+}
