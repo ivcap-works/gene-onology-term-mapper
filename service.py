@@ -1,36 +1,24 @@
 import os
-from fastapi import FastAPI
 from typing import List, Dict, Optional
 import asyncio
 from pydantic import BaseModel, ConfigDict, Field
-from ivcap_fastapi import getLogger, logging_init
-from ivcap_ai_tool import start_tool_server, add_tool_api_route, ToolOptions
+from ivcap_service import getLogger, logging_init, Service
+from ivcap_ai_tool import start_tool_server, add_tool_api_route, ToolOptions, ivcap_ai_tool
 
 from go_term_fetcher import Annotation, fetch_go_terms, filter_by_category
 
 logging_init()
 logger = getLogger("app")
 
-title="Gene Ontology (GO) Term Mapper"
-description = """This service maps a set of protein or gene identifiers (typically UniProt IDs)
-to their corresponding Gene Ontology (GO) annotations using the QuickGO REST API.
-It can filter results by specific GO categories and is optimized for
-multi-ID batch processing."""
-
-app = FastAPI(
-    title=title,
-    description=description,
+service = Service(
+    name="Gene Ontology (GO) Term Mapper",
     version=os.environ.get("VERSION", "???"),
     contact={
         "name": "Mary Doe",
         "email": "mary.doe@acme.au",
     },
-    license_info={
-        "name": "MIT",
-        "url": "https://opensource.org/license/MIT",
-    },
-    docs_url="/api",
 )
+
 
 class Request(BaseModel):
     jschema: str = Field("urn:sd:schema.gene-ontology-term-mapper.request.1", alias="$schema")
@@ -52,13 +40,25 @@ class Result(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
-                "$schema": "urn:sd:schema.is-prime.1",
-                "number": 997,
-                "is_prime": True
-            },
+                "$schema": "urn:sd:schema.gene-ontology-term-mapper.1",
+                "results": {
+                    "P12345": [{
+                        "id": "UniProtKB:P12345!296618610",
+                        "geneProductId": "UniProtKB:P12345",
+                        "qualifier": "involved_in",
+                        "goId": "GO:0006103",
+                        "goAspect": "biological_process",
+                        "goEvidence": "ISS",
+                        "assignedBy": "UniProt",
+                        "symbol": "GOT2",
+                        "reference": "GO_REF:0000024"
+                    }]
+                }
+            }
         },
     )
 
+@ivcap_ai_tool("/", opts=ToolOptions(tags=["GO Term Mapper"]))
 async def map_go_terms(
     req: Request
 ) -> Result:
@@ -87,7 +87,5 @@ async def map_go_terms(
     await asyncio.gather(*(fetch_and_filter(i) for i in req.ids))
     return Result(results=results)
 
-add_tool_api_route(app, "/", map_go_terms, opts=ToolOptions(tags=["GO Term Mapper"]))
-
 if __name__ == "__main__":
-    start_tool_server(app, map_go_terms)
+    start_tool_server(service)

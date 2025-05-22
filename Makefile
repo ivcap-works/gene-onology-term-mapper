@@ -11,7 +11,7 @@ include Makefile.common
 
 run:
 	env VERSION=$(VERSION) \
-		python ${PROJECT_DIR}/service.py --port ${PORT}
+		poetry run python ${PROJECT_DIR}/service.py --port ${PORT}
 
 TEST_REQUEST=tests/two_bp.json
 test-local:
