@@ -33,19 +33,22 @@ PUSH_FROM := ""
 SERVICE_ID := urn:ivcap:service:$(shell python3 -c 'import uuid; print(uuid.uuid5(uuid.NAMESPACE_DNS, "${SERVICE_NAME}" + \
 		"$(shell ivcap context get account-id)"));')
 
-service-register: BUILD_ARCH=amd64
+service-register: TARGET_ARCH=amd64
 service-register: DOCKER_VERSION=${GIT_COMMIT}
-service-register: # tool-register #docker-publish
-	@echo "INFO: Registering service '${SERVICE_ID}' with image '${BUILD_ARCH}'"
+service-register: # tool-register # docker-publish
+	@echo "INFO: Registering service '${SERVICE_ID}' with image '${TARGET_ARCH}'"
 	$(eval account_id=$(shell ivcap context get account-id))
 	@if [[ ${account_id} != urn:ivcap:account:* ]]; then echo "ERROR: No IVCAP account found"; exit -1; fi
-	@$(eval image:=$(shell ivcap package list ${DOCKER_NAME}_${BUILD_ARCH}:${DOCKER_VERSION}))
-	@if [[ -z "${image}" ]]; then echo "ERROR: No uploaded docker image '${DOCKER_NAME}_${BUILD_ARCH}' found"; exit -1; fi
+	@$(eval image:=$(shell ivcap package list ${DOCKER_NAME}_${TARGET_ARCH}:${DOCKER_VERSION}))
+	@if [[ -z "${image}" ]]; then echo "ERROR: No uploaded docker image '${DOCKER_TAG}' found"; exit -1; fi
 	@echo "ServiceID: ${SERVICE_ID} Image: '${image}'"
-	cat ${PROJECT_DIR}/${IVCAP_SERVICE_FILE} \
-	| sed 's|#DOCKER_IMG#|${image}|' \
-	| sed 's|#SERVICE_ID#|${SERVICE_ID}|' \
-  | ivcap aspect update --policy urn:ivcap:policy:ivcap.open.metadata ${SERVICE_ID} -f - --timeout 600
+	docker run --rm -v ${PROJECT_DIR}:/data \
+		-e IVCAP_SERVICE_ID=${SERVICE_ID} \
+		-e DOCKER_IMG=${image} \
+		-e IVCAP_RESOURCES_FILE=/data/resources.json \
+		-e DOCKERFILE=/data/Dockerfile \
+		${DOCKER_NAME}_$(shell uname -m) --print-service-description \
+	| ivcap aspect update --policy urn:ivcap:policy:ivcap.open.metadata ${SERVICE_ID} -f - --timeout 600
 
 service-register-minikube:
 	@$(MAKE) BUILD_ARCH=${TARGET_ARCH} service-register
@@ -53,14 +56,11 @@ service-register-minikube:
 tool-register: #docker-publish
 	$(eval account_id=$(shell ivcap context get account-id))
 	@if [[ ${account_id} != urn:ivcap:account:* ]]; then echo "ERROR: No IVCAP account found"; exit -1; fi
-	$(eval service_id:=urn:ivcap:service:$(shell python3 -c 'import uuid; print(uuid.uuid5(uuid.NAMESPACE_DNS, \
-        "${SERVICE_NAME}" + "${account_id}"));'))
 	$(eval tool_id:=$(shell docker run --rm ${DOCKER_NAME}_${TARGET_ARCH} --print-tool-description  2>/dev/null | grep "\"id\":" | cut -d\" -f 4 ))
-	@echo "DEBUG: ToolID: ${tool_id} ServiceID: ${service_id} - ${DOCKER_NAME}"
+	@echo "DEBUG: ToolID: ${tool_id} ServiceID: ${SERVICE_ID} - ${DOCKER_NAME}"
 	@if [[ -z "${tool_id}" ]]; then echo "ERROR: No Tool ID found"; exit -1; fi
-	docker run --rm ${DOCKER_NAME}_${TARGET_ARCH} --print-tool-description  2>/dev/null \
-	| sed 's|#SERVICE_ID#|${service_id}|' \
-	| ivcap aspect update --policy urn:ivcap:policy:ivcap.open.metadata  ${service_id} -f - --timeout 600
+	docker run --rm -e IVCAP_SERVICE_ID=${SERVICE_ID} ${DOCKER_NAME}_${TARGET_ARCH} --print-tool-description  2>/dev/null
+	| ivcap aspect update --policy urn:ivcap:policy:ivcap.open.metadata  ${SERVICE_ID} -f - --timeout 600
 
 docker-publish: BUILD_ARCH=amd64
 docker-publish: docker-build

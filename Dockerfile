@@ -1,14 +1,17 @@
 FROM python:3.10-slim-buster
 
+RUN pip install poetry
+
 WORKDIR /app
-
 COPY pyproject.toml poetry.lock ./
-
-RUN pip install poetry && poetry install --no-root --without dev
+RUN poetry config virtualenvs.create false && poetry install --no-root
 
 COPY . .
 
-RUN chmod +x /app/run.sh
+# VERSION INFORMATION
+ARG VERSION ???
+ENV VERSION=$VERSION
+ENV PORT=80
 
 # Command to run
-ENTRYPOINT ["/app/run.sh"]
+ENTRYPOINT ["python",  "/app/service.py"]

@@ -32,6 +32,14 @@ test-job:
 	--data "{\"number\": 997}" \
 	${IVCAP_API}/1/services2/${SERVICE_ID}/jobs?with-result-content=true | jq
 
+JOB_ID=6a75971d-5467-4fd4-bfae-cbf23efd41a5
+ivcap-result:
+	curl \
+		-H "Authorization: Bearer $(shell ivcap context get access-token --refresh-token)" \
+		-H "Timeout: ${TIMEOUT}" \
+		${IVCAP_API}/1/services2/${SERVICE_ID}/jobs/${JOB_ID}?with-result-content=false | jq
+
+
 test-job-minikube:
 	@$(MAKE) IVCAP_API=http://ivcap.minikube test-job
 

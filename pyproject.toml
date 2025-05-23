@@ -13,6 +13,11 @@ dependencies = [
     "ivcap-ai-tool (>=0.7.1,<0.8.0)",
 ]
 
+[tool.poetry-plugin-ivcap]
+service = "service.py"
+port = 8077
+docker_tag = "myapp:dev"
+
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
