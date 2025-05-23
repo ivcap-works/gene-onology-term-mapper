@@ -63,6 +63,7 @@ tool-register: #docker-publish
 	| ivcap aspect update --policy urn:ivcap:policy:ivcap.open.metadata  ${SERVICE_ID} -f - --timeout 600
 
 docker-publish: BUILD_ARCH=amd64
+docker-publish: DOCKER_VERSION=${GIT_COMMIT}
 docker-publish: docker-build
 	@echo "INFO: Publishing docker image '${DOCKER_NAME}_${BUILD_ARCH}:${GIT_COMMIT}' for '${BUILD_ARCH}'"
 	docker tag ${DOCKER_NAME}_${TARGET_ARCH} ${DOCKER_NAME}_${BUILD_ARCH}:${GIT_COMMIT}
