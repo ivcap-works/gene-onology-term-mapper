@@ -1,11 +1,6 @@
 # 📘 Tutorial: Building a Gene Ontology (GO) Term Mapper Tool for the IVCAP Platform
 
-See the [TUTORIAL](tutorial.md) file for more
-
-----
-
-
-## What it does
+## What should it do?
 
 Maps genes or proteins to GO terms using a local or remote database (e.g., UniProt or QuickGO), optionally builds a graph.
 
@@ -21,7 +16,7 @@ Maps genes or proteins to GO terms using a local or remote database (e.g., UniPr
 * Output: JSON of GO annotations per gene
 * Optional: Visualize GO hierarchy using networkx
 
-## Sample Questions for an Agent using this service as tool
+## Sample Questions for an Agent using this tool
 
 These are typical user-facing queries an AI assistant might receive:
 
@@ -36,50 +31,132 @@ These are typical user-facing queries an AI assistant might receive:
 * "Which GO terms are shared between these proteins?"
 <br>→ Agent may call map_go_terms and perform post-processing to find overlaps.
 
-## Development Steps
 
-### Setup Poetry
+## 🧰 Prerequisites
 
-We first create a basic `poetry` setup to define all the dependencies as well their respective versions.
+Before starting, ensure you have the following installed:
 
-```
-% poetry init
-
-This command will guide you through creating your pyproject.toml config.
-
-Package name [gene-onology-term-mapper]:
-Version [0.1.0]:
-Description []:  A tool to map genes or proteins to GO terms using a local or remote database
-Author [Max Ott <max.ott@data61.csiro.au>, n to skip]:
-License []:
-Compatible Python versions [>=3.10]:
-
-Would you like to define your main dependencies interactively? (yes/no) [yes] no
-Would you like to define your development dependencies interactively? (yes/no) [yes] no
-Generated file
-
-[project]
-name = "gene-onology-term-mapper"
-version = "0.1.0"
-description = "A tool to map genes or proteins to GO terms using a local or remote database"
-authors = [
-    {name = "Max Ott",email = "max.ott@data61.csiro.au"}
-]
-readme = "README.md"
-requires-python = ">=3.10"
-dependencies = [
-]
+- Python 3.9+
+- Git (for cloning repositories)
+- Docker to build the service container
+- `curl` or `wget` (for downloading binaries)
 
 
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
 
+The rest of the turial is broken up into multiple steps:
 
-Do you confirm generation? (yes/no) [yes]
+- [Step 1: Install Poetry and IVCAP plugin](#step1)
+- [Step 2: Install `ivcap` CLI Tool](#step2)
+- [Step 3: Create Your Project Structure with Poetry](#step3)
+- [Step 4: Add and install Dependencies](#step4)
+- [Step 5: Implement the Core Functionality](#step5)
+- [Step 6: Implement the IVCAP Service Wrapper](#step6)
+- [Step 7: Run and test locally](#step7)
+- [Step 8: Deploying to IVCAP](#step8)
+- [Step 9: Testing the service on IVCAP](#step9)
+
+Let's begin!
+
+---
+
+## Step 1: Install Poetry and IVCAP plugin <a name="step1"></a>
+
+Poetry is a modern dependency and packaging manager for Python.
+
+```bash
+curl -sSL https://install.python-poetry.org | python3 -
 ```
 
-### Implementing the Core Functionality
+After installation, make sure Poetry is in your `PATH`:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Confirm installation:
+
+```bash
+poetry --version
+```
+
+Add the ICAP plugin to poetry:
+
+```bash
+poetry self add poetry-plugin-ivcap
+```
+
+ANd confirm the installation of the plugin:
+
+```bash
+poetry ivcap version
+```
+---
+## Step 2: Install `ivcap` CLI Tool <a name="step2"></a>
+
+The application relies on the `ivcap` CLI. You can install it from [ivcap-cli GitHub Releases](https://github.com/ivcap-works/ivcap-cli#install-released-binaries):
+
+### For macOS/Linux
+
+```bash
+curl -Lo ivcap https://github.com/ivcap-works/ivcap-cli/releases/latest/download/ivcap-$(uname)-amd64
+chmod +x ivcap
+sudo mv ivcap /usr/local/bin/
+```
+
+### For Windows (PowerShell):
+
+```powershell
+Invoke-WebRequest -Uri https://github.com/ivcap-works/ivcap-cli/releases/latest/download/ivcap-Windows-amd64.exe -OutFile ivcap.exe
+Move-Item ivcap.exe 'C:\Program Files\ivcap\ivcap.exe'
+# Add C:\Program Files\ivcap to your PATH if necessary
+```
+
+Verify installation:
+
+```bash
+ivcap --help
+```
+
+---
+
+## Step 3: Create Your Project Structure with Poetry <a name="step3"></a>
+
+```bash
+poetry new my_app
+cd my_app
+```
+
+This creates:
+
+```
+my_app/
+├── pyproject.toml
+├── README.rst
+├── my_app/
+│   └── __init__.py
+└── tests/
+    └── __init__.py
+```
+
+---
+
+## Step 4: Add and install Dependencies <a name="step4"></a>
+
+```bash
+poetry add httpx pydantic ivcap-ai-tool
+```
+
+Use `poetry add <package>` to add other dependencies as needed.
+
+To install the packages, run:
+
+```bash
+poetry install --no-root
+```
+
+---
+
+## Step 5: Implement the Core Functionality <a name="step5"></a>
 
 The base functionality will be provided by a function `fetch_go_terms(uniprot_id: str) -> List[Annotation]`
 which takes a protein ID as argument and returns a list of annotations. It uses the
@@ -104,7 +181,7 @@ async def fetch_go_terms(uniprot_id: str) -> List[Annotation]:
 ```
 
 We also need to import some libraries as well as define the _shape_ of the
-returned annotations.
+returned annotations. Add the following to the top of `go_term_fetcher.py`:
 
 ```python
 import httpx
@@ -132,39 +209,8 @@ class Annotation(BaseModel):
     reference: Optional[str] = None
 ```
 
-and add the dependencies to poetry
-
-```
-% poetry add httpx pydantic fastapi
-Using version ^0.28.1 for httpx
-Using version ^2.11.4 for pydantic
-Using version ^0.115.12 for fastapi
-
-Updating dependencies
-Resolving dependencies... (0.5s)
-
-Package operations: 15 installs, 0 updates, 0 removals
-
-  - Installing typing-extensions (4.13.2)
-  - Installing exceptiongroup (1.3.0)
-  - Installing idna (3.10)
-  - Installing sniffio (1.3.1)
-  - Installing annotated-types (0.7.0)
-  - Installing anyio (4.9.0)
-  - Installing certifi (2025.4.26)
-  - Installing h11 (0.16.0)
-  - Installing pydantic-core (2.33.2)
-  - Installing typing-inspection (0.4.0)
-  - Installing httpcore (1.0.9)
-  - Installing pydantic (2.11.4)
-  - Installing starlette (0.46.2)
-  - Installing fastapi (0.115.12)
-  - Installing httpx (0.28.1)
-
-Writing lock file
-```
-
-To test our progress so far, we add some code to verify that this is working:
+To test our progress so far, we add some code to verify that this is working to the end
+of `go_term_fetcher.py`:
 
 ```python
 if __name__ == "__main__":
@@ -178,9 +224,9 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-And now, let's test it
+And now, let's test it by executing `poetry run python go_term_fetcher.py`:
 
-```
+```bash
 % poetry run python go_term_fetcher.py
 [
   {
@@ -228,7 +274,9 @@ And now, let's test it
 ]
 ```
 
-### Implementing the IVCAP Service Wrapper
+---
+
+## Step 6: Implement the IVCAP Service Wrapper <a name="step6"></a>
 
 Our tool is stateless as well as requires little computational resources. In fact, most of the run time
 will be spent to wait for the reply from the remote _QuickGO_ service. In short it can easily process many requests in
@@ -237,56 +285,62 @@ which will receive requests as `POST` events and return the result in JOSN forma
 
 Therefore, our plan is as follows:
 
+* Add a `tool.poetry-plugin-ivcap` section to `pyproject.toml`
 * Create a new file `service.py`
-* Define a FastAPI instance
+* Describe the service (`Service(...)`)
 * Define the Request as well as Result models
 * Implement the IVCAP service wrapper around the previously defined `fetch_go_terms` function
-* "Publish" the service implementation
-* Add imports and other housekeeping requirements
 * Add code to start the server
 
-#### Define a FastAPI instance
+In `pyproject.toml`, add:
 
-We will use the [FastAPI](https://fastapi.tiangolo.com/) to implement our web service. To start, we define the
-`FastAPI` instance in a new file `service.py`.
+```toml
+[tool.poetry-plugin-ivcap]
+service-file = "service.py"
+service-type = "lambda"
+port = 8077
+```
+
+Now, let's open a new file `service.py` and add the following sections to that file:
+
+### Heasders and logging setup
 
 ```python
 import os
-from fastapi import FastAPI
+from typing import List, Dict, Optional
+import asyncio
+from pydantic import BaseModel, ConfigDict, Field
+from ivcap_service import getLogger, logging_init, Service
+from ivcap_ai_tool import start_tool_server, add_tool_api_route, ToolOptions, ivcap_ai_tool
 
-title="Gene Ontology (GO) Term Mapper"
-description = """This service maps a set of protein or gene identifiers (typically UniProt IDs)
-to their corresponding Gene Ontology (GO) annotations using the QuickGO REST API.
-It can filter results by specific GO categories and is optimized for
-multi-ID batch processing."""
+from go_term_fetcher import Annotation, fetch_go_terms, filter_by_category
 
-app = FastAPI(
-    title=title,
-    description=description,
+logging_init()
+logger = getLogger("app")
+```
+
+### Service description
+
+```python
+service = Service(
+    name="Gene Ontology (GO) Term Mapper",
     version=os.environ.get("VERSION", "???"),
     contact={
         "name": "Mary Doe",
         "email": "mary.doe@acme.au",
     },
-    license_info={
-        "name": "MIT",
-        "url": "https://opensource.org/license/MIT",
-    },
-    docs_url="/api",
 )
 ```
 
-#### Define the Request as well as Result models
+### Request and Result model
 
 We already have implemented our function, but need more formally define the _shape_ or _schema_ of the incoming request
 as well as the reply. For that, we will add the two models `Request` and `Result`
 using the additional functionality from the [Pydantic](https://docs.pydantic.dev/latest/) library to
 make them more self-descriptive:
 
-```python
-from typing import List, Dict, Optional
-from pydantic import BaseModel, ConfigDict, Field
 
+```python
 class Request(BaseModel):
     jschema: str = Field("urn:sd:schema.gene-ontology-term-mapper.request.1", alias="$schema")
     ids: List[str] = Field(description="List of UniProt IDs")
@@ -326,17 +380,15 @@ class Result(BaseModel):
     )
 ```
 
-#### Implement the IVCAP service wrapper around the previously defined `fetch_go_terms` function
+### The service wrapper
 
 We now implement the "wrapper" function which takes the above `Request` instance, calls the previously defined
-`fetch_go_terms` function for each of the requested UniProt IDs and assembles the result. PLease note that we
+`fetch_go_terms` function for each of the requested UniProt IDs and assembles the result. Please note that we
 are adding a quite extensive 'doc_string' to the function. The IVCAP SDK will use this as the tool description
 accessible to the various agent frameworks.
 
 ```python
-import asyncio
-from go_term_fetcher import Annotation, fetch_go_terms, filter_by_category
-
+@ivcap_ai_tool("/", opts=ToolOptions(tags=["GO Term Mapper"]))
 async def map_go_terms(
     req: Request
 ) -> Result:
@@ -366,39 +418,250 @@ async def map_go_terms(
     return Result(results=results)
 ```
 
-#### Publish the service implementation
-
-The following function registers the service implementation `map_go_terms` with the IVCAP service library.
-
-The first argument is the above defined `FastAPI` variable, `"/"` indicates that this service is published
-at the root of the URL. Finally, `opts` allow for additional customisation. See the IVCAP service docs for more
-details.
-
-```python
-from ivcap_ai_tool import add_tool_api_route, ToolOptions
-
-add_tool_api_route(app, "/", map_go_terms, opts=ToolOptions(tags=["GO Term Mapper"]))
-```
-
-#### Add housekeeping requirements
-
-WHat remains missing is initialising the logger and creating one for local consumption. Best to put this at the
-beginning of the file.
-
-```python
-from ivcap_fastapi import getLogger, logging_init
-
-logging_init()
-logger = getLogger("app")
-```
-
-#### Add code to start the server
-
-Now that we have everything in place, we need to start the http server.
+### Code to start the server
 
 ```python
 if __name__ == "__main__":
-    from ivcap_ai_tool import start_tool_server
-
-    start_tool_server(app, map_go_terms)
+    start_tool_server(service)
 ```
+
+---
+
+## Step 7: Run and test locally <a name="step7"></a>
+
+In one terminal window, start the service:
+
+```bash
+poetry ivcap run
+```
+
+which should look like:
+
+```bash
+% poetry ivcap run
+Running: poetry run python service.py --port 8077
+2025-05-29T07:56:12+1000 INFO (app): Gene Ontology (GO) Term Mapper - 0.1.0|9a9a7cc|2025-05-29T07:56:11+10:00 - v0.7.1
+2025-05-29T07:56:12+1000 INFO (uvicorn.error): Started server process [75455]
+2025-05-29T07:56:12+1000 INFO (uvicorn.error): Waiting for application startup.
+2025-05-29T07:56:12+1000 INFO (uvicorn.error): Application startup complete.
+2025-05-29T07:56:12+1000 INFO (uvicorn.error): Uvicorn running on http://0.0.0.0:8077 (Press CTRL+C to quit)
+```
+
+To test the service, we need to first define a request. For that, open a new file `two_bp.json` and add the following:
+
+```json
+{
+  "$schema": "urn:sd:schema.gene-ontology-term-mapper.request.1",
+  "ids": [
+    "P12345",
+    "Q9H0H5"
+  ],
+  "category": "BP"
+}
+```
+
+In a different terminal window, use `curl` (or `wget`) to directly call the service:
+
+```bash
+curl -X POST \
+    -H "content-type: application/json" \
+    -H "timeout: 60" \
+    --data @two_bp.json \
+    http://localhost:8077
+```
+
+Adding a json formatter, like `jq` should give us a nicely formatter reply:
+
+```bash
+% curl -X POST \
+    -H "content-type: application/json" \
+    -H "timeout: 60" \
+    --data @tests/two_bp.json \
+    http://localhost:8077 | jq
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 10031  100  9907  100   124   4968     62  0:00:02  0:00:01  0:00:01  5028
+{
+  "$schema": "urn:sd:schema.gene-ontology-term-mapper.1",
+  "results": {
+    "P12345": [
+      {
+        "id": "UniProtKB:P12345!306410578",
+        "geneProductId": "UniProtKB:P12345",
+        "qualifier": "involved_in",
+        "goId": "GO:0006103",
+        "goAspect": "biological_process",
+        "goEvidence": "ISS",
+        "goName": null,
+        "assignedBy": "UniProt",
+        "symbol": "GOT2",
+        "synonyms": null,
+        "name": null,
+        "reference": "GO_REF:0000024"
+      },
+      ...
+```
+
+---
+
+## Step 8: Deploying to IVCAP <a name="step8"></a>
+
+To deploy a service or tool to IVCAP, we need to do the following:
+
+* Build and publish the service as a Docker container
+* Register the service
+* Register the service as a tool
+
+### Build and publish the service as a Docker container
+
+To package the code we have developed so far into a docker container, we first need to
+create a Dockerfile. Open a file named `Dockerfile` and add the following:
+
+```dockerfile
+FROM python:3.10-slim-buster
+
+RUN pip install poetry
+
+WORKDIR /app
+COPY pyproject.toml poetry.lock ./
+RUN poetry config virtualenvs.create false && poetry install --no-root
+
+COPY . .
+
+# VERSION INFORMATION
+ARG VERSION ???
+ENV VERSION=$VERSION
+ENV PORT=80
+
+# Command to run
+ENTRYPOINT ["python",  "/app/service.py"]
+```
+
+To test our setup, we will first build the docker image locally:
+
+```bash
+poetry ivcap docker-build
+```
+
+You should see something like:
+```bash
+% poetry ivcap docker-build
+INFO: docker buildx build -t gene_onology_term_mapper_arm64:9a9a7cc --platform linux/arm64 --build-arg VERSION=0.1.0|9a9a7cc|2025-05-29T08:48:39+10:00 --build-arg BUILD_PLATFORM=linux/arm64 -f /Dockerfile --load .
+[+] Building 43.3s (1/10)
+ => [internal] load build definition from Dockerfile
+ => => transferring dockerfile: 441B
+ => [internal] load metadata for docker.io/library/python:3.10-slim-buster
+ ...
+ INFO: Docker build completed successfully
+```
+
+You can test the docker image with:
+```bash
+poetry ivcap docker-run
+```
+
+This should create a service listening on the same port as in the above "Run and test locally" step. The same 'curl' (or 'wget') tests should succeed and return the same results.
+
+After verifying that the docker container build successfully, we can now deploy it:
+
+```
+poetry ivcap docker-publish
+```
+
+This may build a new container if your CPU architecture is different to the one of the respective IVCAP cluster. This is likely the case if your development machine is using an ARM CPU (like Apple Silicon).
+
+You should see something similar to:
+```bash
+$ poetry ivcap docker-publish
+INFO: docker buildx build -t gene_onology_term_mapper_amd64:9a9a7cc --platform linux/amd64 --build-arg VERSION=0.2.0|b4dbd44|2025-05-28T16:27:56+10:00 --build-arg BUILD_PLATFORM=linux/amd64 -f Dockerfile --load .
+[+] Building 0.9s (14/14) FINISHED
+=> [internal] load build definition from Dockerfile
+...
+INFO: Docker build completed successfully
+...
+INFO: Image size 287.9 MB
+Running: ivcap package push --force --local gene_onology_term_mapper_amd64:9a9a7cc
+ Pushing gene_onology_term_mapper_amd64:9a9a7cc from local, may take multiple minutes depending on the size of the image ...
+...
+ 45a06508-5c3a-4678-8e6d-e6399bf27538/gene_onology_term_mapper_amd64:9a9a7cc pushed
+INFO: package push completed successfully
+```
+
+### Register the service
+
+To register this tool we can again simply invoke the respective poetry command:
+
+```bash
+poetry ivcap service-register
+```
+
+### Register the service as AI tool
+
+To make this service discoverable by AI agents operating on the platform, we need to
+upload the necessary description of this service to IVCAP. The `poetry ivcap service-register` command will create that description from the doc-string of the `map_go_terms` function
+as well as its parameters. It is therefore very important to not only provide comprehensive
+description of the core service function, but also add sufficient descriptions and examples to the parameter declarations. The above `Request` and `Result` models provide a good example on how to do this.
+
+```bash
+poetry ivcap tool-register
+```
+---
+
+## Step 9: Testing the service on IVCAP <a name="step9"></a>
+
+To test the service we have deployed in the previous step we can follow the same sequence as in
+[Step 7: Run and test locally](#step7). We can use the same test request `two_bp.json`.
+
+```bash
+TOKEN=$(ivcap context get access-token --refresh-token); \
+URL=$(ivcap context get url)/1/services2/$(poetry ivcap --silent get-service-id)/jobs; \
+curl -i -X POST \
+    -H "content-type: application/json" \
+    -H "Authorization: Bearer ${TOKEN}" \
+    -H "timeout: 60" \
+    --data @two_bp.json \
+    ${URL}
+```
+
+To combine that with `jq`, we should see something like (note the missing `-i`):
+```
+% TOKEN=$(ivcap context get access-token --refresh-token); \
+URL=$(ivcap context get url)/1/services2/$(poetry ivcap --silent get-service-id)/jobs; \
+curl -X POST \
+    -H "content-type: application/json" \
+    -H "Authorization: Bearer ${TOKEN}" \
+    -H "timeout: 60" \
+    --data @two_bp.json \
+    ${URL} |jq
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 10031    0  9907  100   124   3764     47  0:00:02  0:00:02 --:--:--  3811
+{
+  "$schema": "urn:sd:schema.gene-ontology-term-mapper.1",
+  "results": {
+    "P12345": [
+      {
+        "id": "UniProtKB:P12345!306410578",
+        "geneProductId": "UniProtKB:P12345",
+        "qualifier": "involved_in",
+        "goId": "GO:0006103",
+        "goAspect": "biological_process",
+        "goEvidence": "ISS",
+        "goName": null,
+        "assignedBy": "UniProt",
+        "symbol": "GOT2",
+        "synonyms": null,
+        "name": null,
+        "reference": "GO_REF:0000024"
+      },
+      ...
+```
+---
+
+## 🏁 Conclusion
+
+You’ve built a fully functional IVCAP service which can also be used as an AI tool using:
+
+- Poetry for dependency and packaging
+- `ivcap` CLI for interacting with an IVCAP deployment
+- calls to external services, such as QuickGO

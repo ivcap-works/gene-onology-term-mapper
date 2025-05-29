@@ -334,6 +334,12 @@ service = Service(
 
 ### Request and Result model
 
+We already have implemented our function, but need more formally define the _shape_ or _schema_ of the incoming request
+as well as the reply. For that, we will add the two models `Request` and `Result`
+using the additional functionality from the [Pydantic](https://docs.pydantic.dev/latest/) library to
+make them more self-descriptive:
+
+
 ```python
 class Request(BaseModel):
     jschema: str = Field("urn:sd:schema.gene-ontology-term-mapper.request.1", alias="$schema")
@@ -375,6 +381,11 @@ class Result(BaseModel):
 ```
 
 ### The service wrapper
+
+We now implement the "wrapper" function which takes the above `Request` instance, calls the previously defined
+`fetch_go_terms` function for each of the requested UniProt IDs and assembles the result. Please note that we
+are adding a quite extensive 'doc_string' to the function. The IVCAP SDK will use this as the tool description
+accessible to the various agent frameworks.
 
 ```python
 @ivcap_ai_tool("/", opts=ToolOptions(tags=["GO Term Mapper"]))
