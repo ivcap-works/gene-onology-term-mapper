@@ -1,4 +1,9 @@
-# Gene Ontology (GO) Term Mapper
+# 📘 Tutorial: Building a Gene Ontology (GO) Term Mapper Tool for the IVCAP Platform
+
+See the [TUTORIAL](tutorial.md) file for more
+
+----
+
 
 ## What it does
 

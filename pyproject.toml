@@ -14,9 +14,12 @@ dependencies = [
 ]
 
 [tool.poetry-plugin-ivcap]
-service = "service.py"
+service-file = "service.py"
+service-id = "urn:ivcap:service:ac158a1f-dfb4-5dac-bf2e-9bf15e0f2cc7"
+service-type = "lambda"
 port = 8077
-docker_tag = "myapp:dev"
+# docker
+#docker-run-opts = ["--port", "9999" ]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

@@ -43,11 +43,12 @@ service-register: # tool-register # docker-publish
 	@if [[ -z "${image}" ]]; then echo "ERROR: No uploaded docker image '${DOCKER_TAG}' found"; exit -1; fi
 	@echo "ServiceID: ${SERVICE_ID} Image: '${image}'"
 	docker run --rm -v ${PROJECT_DIR}:/data \
+			--platform=linux/${TARGET_ARCH} \
 		-e IVCAP_SERVICE_ID=${SERVICE_ID} \
 		-e DOCKER_IMG=${image} \
 		-e IVCAP_RESOURCES_FILE=/data/resources.json \
 		-e DOCKERFILE=/data/Dockerfile \
-		${DOCKER_NAME}_$(shell uname -m) --print-service-description \
+		${DOCKER_NAME}_${TARGET_ARCH} --print-service-description \
 	| ivcap aspect update --policy urn:ivcap:policy:ivcap.open.metadata ${SERVICE_ID} -f - --timeout 600
 
 service-register-minikube:
@@ -63,10 +64,9 @@ tool-register: #docker-publish
 	| ivcap aspect update --policy urn:ivcap:policy:ivcap.open.metadata  ${SERVICE_ID} -f - --timeout 600
 
 docker-publish: BUILD_ARCH=amd64
-docker-publish: DOCKER_VERSION=${GIT_COMMIT}
 docker-publish: docker-build
 	@echo "INFO: Publishing docker image '${DOCKER_NAME}_${BUILD_ARCH}:${GIT_COMMIT}' for '${BUILD_ARCH}'"
-	docker tag ${DOCKER_NAME}_${TARGET_ARCH} ${DOCKER_NAME}_${BUILD_ARCH}:${GIT_COMMIT}
+	docker tag ${DOCKER_NAME}_${BUILD_ARCH} ${DOCKER_NAME}_${BUILD_ARCH}:${GIT_COMMIT}
 	$(eval size:=$(shell docker inspect ${DOCKER_NAME}_${BUILD_ARCH}:${DOCKER_VERSION} --format='{{.Size}}' | tr -cd '0-9'))
 	$(eval imageSize:=$(shell expr ${size} + 0 ))
 	@echo "... imageSize is ${imageSize}"
