@@ -1,3 +1,8 @@
+#
+# Copyright (c) 2025 Commonwealth Scientific and Industrial Research Organisation (CSIRO). All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file. See the AUTHORS file for names of contributors.
+#
 import httpx
 from typing import List, Dict, Optional
 from pydantic import BaseModel
@@ -23,6 +28,7 @@ class Annotation(BaseModel):
     reference: Optional[str] = None
 
 async def fetch_go_terms(uniprot_id: str) -> List[Annotation]:
+    """Fetch the annotations for 'uniprot_id' from the QuickGO service."""
     url = f"https://www.ebi.ac.uk/QuickGO/services/annotation/search"
     params = {
         "geneProductId": f"UniProtKB:{uniprot_id}",
@@ -35,7 +41,8 @@ async def fetch_go_terms(uniprot_id: str) -> List[Annotation]:
         results = [Annotation(**d) for d in data["results"]]
         return results
 
-def filter_by_category(go_terms: List[Annotation], category: str) -> List[Dict]:
+def filter_by_category(go_terms: List[Annotation], category: str) -> List[Annotation]:
+    """If 'category' is in GO_CATEGORIES, filter the go_terms by that category."""
     if category not in GO_CATEGORIES:
         return go_terms
     return [t for t in go_terms if t.goAspect == GO_CATEGORIES[category]]

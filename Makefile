@@ -59,5 +59,7 @@ docker-debug: #docker-build
 		--entrypoint bash \
 		${DOCKER_NAME}_${TARGET_ARCH}
 
+add-license:
+	poetry run licenseheaders -t .license.tmpl -y $(shell date +%Y) -f *.py
 
 .PHONY: run

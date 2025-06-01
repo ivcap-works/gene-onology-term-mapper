@@ -1,9 +1,14 @@
+#
+# Copyright (c) 2025 Commonwealth Scientific and Industrial Research Organisation (CSIRO). All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file. See the AUTHORS file for names of contributors.
+#
 import os
 from typing import List, Dict, Optional
 import asyncio
 from pydantic import BaseModel, ConfigDict, Field
-from ivcap_service import getLogger, logging_init, Service
-from ivcap_ai_tool import start_tool_server, add_tool_api_route, ToolOptions, ivcap_ai_tool
+from ivcap_service import getLogger, Service
+from ivcap_ai_tool import start_tool_server, logging_init, ToolOptions, ivcap_ai_tool
 
 from go_term_fetcher import Annotation, fetch_go_terms, filter_by_category
 

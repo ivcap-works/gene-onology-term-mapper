@@ -167,6 +167,7 @@ Let's open a new file `go_term_fetcher.py` and add the following:
 
 ```python
 async def fetch_go_terms(uniprot_id: str) -> List[Annotation]:
+    """Fetch the annotations for 'uniprot_id' from the QuickGO service."""
     url = f"https://www.ebi.ac.uk/QuickGO/services/annotation/search"
     params = {
         "geneProductId": f"UniProtKB:{uniprot_id}",
@@ -178,6 +179,12 @@ async def fetch_go_terms(uniprot_id: str) -> List[Annotation]:
         data = resp.json()
         results = [Annotation(**d) for d in data["results"]]
         return results
+
+def filter_by_category(go_terms: List[Annotation], category: str) -> List[Annotation]:
+    """If 'category' is in GO_CATEGORIES, filter the go_terms by that category."""
+    if category not in GO_CATEGORIES:
+        return go_terms
+    return [t for t in go_terms if t.goAspect == GO_CATEGORIES[category]]
 ```
 
 We also need to import some libraries as well as define the _shape_ of the
@@ -310,8 +317,8 @@ import os
 from typing import List, Dict, Optional
 import asyncio
 from pydantic import BaseModel, ConfigDict, Field
-from ivcap_service import getLogger, logging_init, Service
-from ivcap_ai_tool import start_tool_server, add_tool_api_route, ToolOptions, ivcap_ai_tool
+from ivcap_service import getLogger, Service
+from ivcap_ai_tool import start_tool_server, logging_init, ToolOptions, ivcap_ai_tool
 
 from go_term_fetcher import Annotation, fetch_go_terms, filter_by_category
 
@@ -440,11 +447,11 @@ which should look like:
 ```bash
 % poetry ivcap run
 Running: poetry run python service.py --port 8077
-2025-05-29T07:56:12+1000 INFO (app): Gene Ontology (GO) Term Mapper - 0.1.0|9a9a7cc|2025-05-29T07:56:11+10:00 - v0.7.1
-2025-05-29T07:56:12+1000 INFO (uvicorn.error): Started server process [75455]
-2025-05-29T07:56:12+1000 INFO (uvicorn.error): Waiting for application startup.
-2025-05-29T07:56:12+1000 INFO (uvicorn.error): Application startup complete.
-2025-05-29T07:56:12+1000 INFO (uvicorn.error): Uvicorn running on http://0.0.0.0:8077 (Press CTRL+C to quit)
+2025-06-02T09:54:13+1000 INFO (app): Gene Ontology (GO) Term Mapper - 0.1.0|9083543|2025-06-02T09:54:12+10:00 - v0.7.6
+2025-06-02T09:54:13+1000 INFO (uvicorn): Started server process [22445]
+2025-06-02T09:54:13+1000 INFO (uvicorn): Waiting for application startup.
+2025-06-02T09:54:13+1000 INFO (uvicorn): Application startup complete.
+2025-06-02T09:54:13+1000 INFO (uvicorn): Uvicorn running on http://0.0.0.0:8077 (Press CTRL+C to quit)
 ```
 
 To test the service, we need to first define a request. For that, open a new file `two_bp.json` and add the following:
