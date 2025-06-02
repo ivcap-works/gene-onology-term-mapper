@@ -100,7 +100,7 @@ The application relies on the `ivcap` CLI. Install and build instructions can be
 If you use [homebrew](https://brew.sh/), you can install it by:
 
 ```
-brew tap brew tap ivcap-works/ivcap
+brew tap ivcap-works/ivcap
 brew install ivcap
 ```
 
@@ -154,6 +154,7 @@ my_app/
     └── __init__.py
 ```
 
+> **Important:** Please change the line `requires-python = ">=3.xx"` with `requires-python = ">=3.xx,<4.0"` where `xx` is your current python version (eg. 9, 10, 11, 12, ...).
 ---
 
 ## Step 4: Add and install Dependencies <a name="step4"></a>
