@@ -546,11 +546,27 @@ To deploy a service or tool to IVCAP, we need to do the following:
 ### Build and test the service as a Docker container
 
 To package the code we have developed so far into a docker container, we first need to
-create a Dockerfile. Open a file named `Dockerfile` and add the following:
+create a Dockerfile.
+
+The first line in the Dockerfile references an image with a specific version of python already installed.
+
+Please check the version of python referenced in the `pyproject.toml` file with:
+
+```bash
+poetry run python --version
+```
+Depending on the major (3) and minor (e.g. 10, 11, 12) pick the appropriate base image:
+
+| Python Version | Base Image Tag                |
+|----------------|-------------------------------|
+| **3.10**       | `python:3.10-slim-bullseye`   |
+| **3.11**       | `python:3.11-slim-bookworm`   |
+| **3.12**       | `python:3.12-slim-bookworm`   |
+
+Now open a file named `Dockerfile` and add the following, replacing `#BASE_IMAGE#` with the respective version from the above table:
 
 ```dockerfile
-FROM python:3.10-slim-buster
-
+FROM #BASE_IMAGE#
 RUN pip install poetry
 
 WORKDIR /app
