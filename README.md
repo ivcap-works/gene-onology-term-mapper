@@ -138,7 +138,7 @@ to the individual platforms' support channels.
 ## Step 3: Create Your Project Structure with Poetry <a name="step3"></a>
 
 ```bash
-poetry new my_app
+poetry new my_app --flat
 cd my_app
 ```
 
@@ -180,7 +180,7 @@ which takes a protein ID as argument and returns a list of annotations. It uses 
 [Gene Ontology and GO Annotations (QuickGO)](https://www.ebi.ac.uk/QuickGO/) service to retrieve the
 annotations.
 
-Let's open a new file `go_term_fetcher.py` and add the following:
+Let's open a new file `my_app/go_term_fetcher.py` and add the following:
 
 ```python
 async def fetch_go_terms(uniprot_id: str) -> List[Annotation]:
@@ -205,7 +205,7 @@ def filter_by_category(go_terms: List[Annotation], category: str) -> List[Annota
 ```
 
 We also need to import some libraries as well as define the _shape_ of the
-returned annotations. Add the following to the top of `go_term_fetcher.py`:
+returned annotations using the [Pydantic](https://docs.pydantic.dev/latest/) library. Add the following to the top of `go_term_fetcher.py`:
 
 ```python
 import httpx
@@ -248,10 +248,16 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-And now, let's test it by executing `poetry run python go_term_fetcher.py`:
+And now, let's test it by executing `poetry run python my_app/go_term_fetcher.py`:
 
 ```bash
-% poetry run python go_term_fetcher.py
+poetry run python my_app/go_term_fetcher.py
+```
+
+You should see something like:
+
+```bash
+% poetry run python my_app/go_term_fetcher.py
 [
   {
     "id": "UniProtKB:P12345!306410571",
@@ -310,22 +316,22 @@ which will receive requests as `POST` events and return the result in JOSN forma
 Therefore, our plan is as follows:
 
 * Add a `tool.poetry-plugin-ivcap` section to `pyproject.toml`
-* Create a new file `service.py`
+* Create a new file `my_app/service.py`
 * Describe the service (`Service(...)`)
-* Define the Request as well as Result models
+* Define the Request as well as Result [Pydantic](https://docs.pydantic.dev/latest/) models
 * Implement the IVCAP service wrapper around the previously defined `fetch_go_terms` function
 * Add code to start the server
 
-In `pyproject.toml`, add:
+In `pyproject.toml`, add the following to the end of the file:
 
 ```toml
 [tool.poetry-plugin-ivcap]
-service-file = "service.py"
+service-file = "my_app/service.py"
 service-type = "lambda"
 port = 8077
 ```
 
-Now, let's open a new file `service.py` and add the following sections to that file:
+Now, let's open a new file `my_app/service.py` and add the following sections to that file:
 
 ### Headers and logging setup
 
@@ -462,7 +468,7 @@ which should look like:
 
 ```bash
 % poetry ivcap run
-Running: poetry run python service.py --port 8077
+Running: poetry run python my_app/service.py --port 8077
 2025-06-02T09:54:13+1000 INFO (app): Gene Ontology (GO) Term Mapper - 0.1.0|9083543|2025-06-02T09:54:12+10:00 - v0.7.6
 2025-06-02T09:54:13+1000 INFO (uvicorn): Started server process [22445]
 2025-06-02T09:54:13+1000 INFO (uvicorn): Waiting for application startup.
@@ -531,11 +537,13 @@ Adding a json formatter, like `jq` should give us a nicely formatter reply:
 
 To deploy a service or tool to IVCAP, we need to do the following:
 
-* Build and publish the service as a Docker container
+* Build and test the service as a Docker container
+* Create a `git commit` of progress so far
+* Publish the service container
 * Register the service
 * Register the service as a tool
 
-### Build and publish the service as a Docker container
+### Build and test the service as a Docker container
 
 To package the code we have developed so far into a docker container, we first need to
 create a Dockerfile. Open a file named `Dockerfile` and add the following:
@@ -578,7 +586,11 @@ INFO: docker buildx build -t gene_onology_term_mapper_arm64:9a9a7cc --platform l
  INFO: Docker build completed successfully
 ```
 
-You can test the docker image with:
+You can now test the docker image.
+
+> **Note:** Before proceeding make sure that the above test with the
+"plain" python files has been terminated and the associated port freed.
+
 ```bash
 poetry ivcap docker-run
 ```
@@ -587,11 +599,44 @@ This should create a service listening on the same port as in the above "Run and
 
 After verifying that the docker container build successfully, we can now deploy it:
 
+### Create a `git commit` of progress so far
+
+IVCAP only accespt versioned services identifying a specific implementation of a service. Any invocation of a service will also create a proveneance record not only of what service has been used to produce a particular result, but also
+its version as well as any other relevant properties.
+
+As `git` has been widely adopted to mainain similar versin control of software, we have been adopting the `commit` hash of the current source code as the version for the respective docker container.
+
+Therefore, we need to turn this directory into a git repository, add all the created code so far and "commit" all that to create our initial commit hash.
+
+```bash
+git init
+git add .
+git commit -m "initial implementation of my_app"
+```
+
+To verify that we indeed have a commit hash, run the following:
+
+```bash
+git rev-parse --short HEAD
+```
+
+You should see something like:
+```bash
+% git rev-parse --short HEAD
+635d141
+```
+
+### Publish the service container
+
+Now we should have everything in place to publish the previoulsy build and tested docker container. Please note, that if
+the architecture of your local machine uses a different CPU architecture from the one
+used for the target platform, the following command will first build a new container for the target platform.
+This is likely the case if your development machine is using an ARM CPU (like Apple Silicon).
+
 ```
 poetry ivcap docker-publish
 ```
 
-This may build a new container if your CPU architecture is different to the one of the respective IVCAP cluster. This is likely the case if your development machine is using an ARM CPU (like Apple Silicon).
 
 You should see something similar to:
 ```bash

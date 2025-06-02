@@ -8,7 +8,7 @@ from typing import Dict, List
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from go_term_fetcher import Annotation
+from my_app.go_term_fetcher import Annotation
 
 def build_go_graph(go_data: Dict[str, List[Annotation]]) -> nx.DiGraph:
     G = nx.DiGraph()
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     import asyncio
     import json
     from fastapi.encoders import jsonable_encoder
-    from go_term_fetcher import fetch_go_terms
+    from my_app.go_term_fetcher import fetch_go_terms
 
     async def main():
         terms = {
