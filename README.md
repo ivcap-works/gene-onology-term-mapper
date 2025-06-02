@@ -154,7 +154,7 @@ my_app/
     └── __init__.py
 ```
 
-> **Important:** Please change the line `requires-python = ">=3.xx"` with `requires-python = ">=3.xx,<4.0"` where `xx` is your current python version (eg. 9, 10, 11, 12, ...).
+> **Important:** Please open `pyproject.toml` in an editor and change the line `requires-python = ">=3.xx"` to `requires-python = ">=3.xx,<4.0"` where `xx` is your current python version (eg. 9, 10, 11, 12, ...). This is needed for version compatibility checks when adding dependencies in the next step.
 ---
 
 ## Step 4: Add and install Dependencies <a name="step4"></a>
@@ -163,7 +163,7 @@ my_app/
 poetry add httpx pydantic ivcap-ai-tool
 ```
 
-Use `poetry add <package>` to add other dependencies as needed.
+> **Note:** If this results in errors like _"The current project's supported Python range (>=3.12) is not compatible with ..."_ make sure you have edited the `pyproject.toml` as instructed above.
 
 To install the packages, run:
 
