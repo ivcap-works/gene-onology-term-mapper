@@ -17,7 +17,6 @@ logger = getLogger("app")
 
 service = Service(
     name="Gene Ontology (GO) Term Mapper",
-    version=os.environ.get("VERSION", "???"),
     contact={
         "name": "Mary Doe",
         "email": "mary.doe@acme.au",

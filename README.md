@@ -327,7 +327,7 @@ port = 8077
 
 Now, let's open a new file `service.py` and add the following sections to that file:
 
-### Heasders and logging setup
+### Headers and logging setup
 
 ```python
 import os
@@ -348,7 +348,6 @@ logger = getLogger("app")
 ```python
 service = Service(
     name="Gene Ontology (GO) Term Mapper",
-    version=os.environ.get("VERSION", "???"),
     contact={
         "name": "Mary Doe",
         "email": "mary.doe@acme.au",
