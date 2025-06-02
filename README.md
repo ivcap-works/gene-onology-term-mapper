@@ -93,14 +93,15 @@ poetry ivcap version
 ---
 ## Step 2: Install `ivcap` CLI Tool <a name="step2"></a>
 
-The application relies on the `ivcap` CLI. You can install it from [ivcap-cli GitHub Releases](https://github.com/ivcap-works/ivcap-cli#install-released-binaries):
+The application relies on the `ivcap` CLI. Install and build instructions can be found on [github](https://github.com/ivcap-works/ivcap-cli). A list of pre-built binaries can be found [here](https://github.com/ivcap-works/ivcap-cli/releases/latest).
 
 ### For macOS/Linux
 
-```bash
-curl -Lo ivcap https://github.com/ivcap-works/ivcap-cli/releases/latest/download/ivcap-$(uname)-amd64
-chmod +x ivcap
-sudo mv ivcap /usr/local/bin/
+If you use [homebrew](https://brew.sh/), you can install it by:
+
+```
+brew tap brew tap ivcap-works/ivcap
+brew install ivcap
 ```
 
 ### For Windows (PowerShell):
@@ -116,6 +117,21 @@ Verify installation:
 ```bash
 ivcap --help
 ```
+
+To configure it for a specific IVCAP deployment, follow [these instructions](https://github.com/ivcap-works/ivcap-cli?tab=readme-ov-file#configure-context-for-a-specific-deployment). For instance, to connect to the SD dev deployment, you can use (`sd-dev` is  a local alias, pick whatever makes it easy for you to remember, in case you work across multiple platofrm instancies):
+
+```bash
+ivcap context create sd-dev https://develop.ivcap.net
+```
+
+After setting up a specific context, please log in before proceeding. The ivcap poetry plugin is using the cli tool to communicate with the selected platform.
+
+```bash
+ivcap context login
+```
+
+If you have trouble logging in, see these [more detailed descriptions](https://github.com/ivcap-works/ivcap-cli?tab=readme-ov-file#configure-context-for-a-specific-deployment). For problems creating the initial accounts, please refer
+to the individual platforms' support channels.
 
 ---
 
