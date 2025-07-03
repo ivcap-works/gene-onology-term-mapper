@@ -43,7 +43,7 @@ Before starting, ensure you have the following installed:
 
 
 
-The rest of the turial is broken up into multiple steps:
+The rest of the tutorial is broken up into multiple steps:
 
 - [Step 1: Install Poetry and IVCAP plugin](#step1)
 - [Step 2: Install `ivcap` CLI Tool](#step2)
@@ -85,7 +85,7 @@ Add the ICAP plugin to poetry:
 poetry self add poetry-plugin-ivcap
 ```
 
-ANd confirm the installation of the plugin:
+Add confirm the installation of the plugin:
 
 ```bash
 poetry ivcap version
@@ -650,13 +650,13 @@ used for the target platform, the following command will first build a new conta
 This is likely the case if your development machine is using an ARM CPU (like Apple Silicon).
 
 ```
-poetry ivcap docker-publish
+poetry ivcap deploy
 ```
 
 
 You should see something similar to:
 ```bash
-$ poetry ivcap docker-publish
+$ poetry ivcap deploy
 INFO: docker buildx build -t gene_onology_term_mapper_amd64:9a9a7cc --platform linux/amd64 --build-arg VERSION=0.2.0|b4dbd44|2025-05-28T16:27:56+10:00 --build-arg BUILD_PLATFORM=linux/amd64 -f Dockerfile --load .
 [+] Building 0.9s (14/14) FINISHED
 => [internal] load build definition from Dockerfile
@@ -669,26 +669,13 @@ Running: ivcap package push --force --local gene_onology_term_mapper_amd64:9a9a7
 ...
  45a06508-5c3a-4678-8e6d-e6399bf27538/gene_onology_term_mapper_amd64:9a9a7cc pushed
 INFO: package push completed successfully
+...
+INFO: service definition successfully uploaded - urn:ivcap:aspect:1c1c1714-1456-4e44-9433-f1a24099673d
+...
+INFO: tool description successfully uploaded - urn:ivcap:aspect:1632a3df-c79e-43c3-be75-06ff3a6138d2
+
 ```
 
-### Register the service
-
-To register this tool we can again simply invoke the respective poetry command:
-
-```bash
-poetry ivcap service-register
-```
-
-### Register the service as AI tool
-
-To make this service discoverable by AI agents operating on the platform, we need to
-upload the necessary description of this service to IVCAP. The `poetry ivcap service-register` command will create that description from the doc-string of the `map_go_terms` function
-as well as its parameters. It is therefore very important to not only provide comprehensive
-description of the core service function, but also add sufficient descriptions and examples to the parameter declarations. The above `Request` and `Result` models provide a good example on how to do this.
-
-```bash
-poetry ivcap tool-register
-```
 ---
 
 ## Step 9: Testing the service on IVCAP <a name="step9"></a>
