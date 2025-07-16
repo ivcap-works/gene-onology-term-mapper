@@ -723,21 +723,21 @@ type = ["pytest-mypy"]
 
 [[package]]
 name = "ivcap-ai-tool"
-version = "0.7.6"
+version = "0.7.9"
 description = "Helper functions for building AI Tools as IVCAP services"
 optional = false
-python-versions = "<4.0,>=3.9"
+python-versions = "<4.0,>=3.10"
 groups = ["main"]
 files = [
-    {file = "ivcap_ai_tool-0.7.6-py3-none-any.whl", hash = "sha256:e4320b748d96ae3f43427989722bca1e291e262b99450a584470893ed93a2462"},
-    {file = "ivcap_ai_tool-0.7.6.tar.gz", hash = "sha256:1a6d17e68f5baabb4e14b20f51279e932b55393009249c07b7d9829be9d9241d"},
+    {file = "ivcap_ai_tool-0.7.9-py3-none-any.whl", hash = "sha256:e6ae4cb326b1e36214a69582527131aafb5ebb365d195f15fd931aef4e135c8f"},
+    {file = "ivcap_ai_tool-0.7.9.tar.gz", hash = "sha256:a5105f0ffa0fe703d1b7c5e19e3dc44275e78ea3a6e9d0419f5707aa7ccaae42"},
 ]
 
 [package.dependencies]
 cachetools = ">=5.5.2,<6.0.0"
 fastapi = ">=0.115.12,<0.116.0"
 google-cloud-secret-manager = "2.22.0"
-ivcap-service = ">=0.5.6,<0.6.0"
+ivcap-service = ">=0.5.9,<0.6.0"
 jwt = ">=1.3.1,<2.0.0"
 opentelemetry-instrumentation-fastapi = ">=0.51b0,<0.52"
 uuid6 = "2024.7.10"
@@ -745,14 +745,14 @@ uvicorn = ">=0.34.2,<0.35.0"
 
 [[package]]
 name = "ivcap-service"
-version = "0.5.6"
+version = "0.5.9"
 description = "SDK library for building services for the IVCAP platform"
 optional = false
-python-versions = "<4.0,>=3.9"
+python-versions = "<4.0,>=3.10"
 groups = ["main"]
 files = [
-    {file = "ivcap_service-0.5.6-py3-none-any.whl", hash = "sha256:bb8591e32233bded20f4ec33c6b8dcb63406d866343d38fa9216421e47dbd063"},
-    {file = "ivcap_service-0.5.6.tar.gz", hash = "sha256:1b125a1d12e8d60c83824b65423339b992f55461d936a1c02b5890f6f8baba37"},
+    {file = "ivcap_service-0.5.9-py3-none-any.whl", hash = "sha256:4615d53820c2a23494afcc66de0ec62508db3640a3d9072f9d1fef1e66bbaf4f"},
+    {file = "ivcap_service-0.5.9.tar.gz", hash = "sha256:a01505bd84105eb9957476966213d315462d70e4fc0bdb048d1841e43742d31b"},
 ]
 
 [package.dependencies]
@@ -1534,4 +1534,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<4.0"
-content-hash = "c3019e018274a35d2eef53659d4795a524355a488210badbd3087f8283a73b5b"
+content-hash = "ff8e84b184ec968bf8817213827e39b29f8c3e2ca260d1f5a3a5a7769deae5a5"
