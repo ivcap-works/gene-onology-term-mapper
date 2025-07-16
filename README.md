@@ -322,6 +322,7 @@ Therefore, our plan is as follows:
 * Implement the IVCAP service wrapper around the previously defined `fetch_go_terms` function
 * Add code to start the server
 
+
 In `pyproject.toml`, add the following to the end of the file:
 
 ```toml
@@ -684,48 +685,26 @@ To test the service we have deployed in the previous step we can follow the same
 [Step 7: Run and test locally](#step7). We can use the same test request `two_bp.json`.
 
 ```bash
-TOKEN=$(ivcap context get access-token --refresh-token); \
-URL=$(ivcap context get url)/1/services2/$(poetry ivcap --silent get-service-id)/jobs; \
-curl -i -X POST \
-    -H "content-type: application/json" \
-    -H "Authorization: Bearer ${TOKEN}" \
-    -H "timeout: 60" \
-    --data @two_bp.json \
-    ${URL}
+poetry ivcap job-exec two_bp.json
 ```
 
-To combine that with `jq`, we should see something like (note the missing `-i`):
+Running this, we should see something like:
 ```
-% TOKEN=$(ivcap context get access-token --refresh-token); \
-URL=$(ivcap context get url)/1/services2/$(poetry ivcap --silent get-service-id)/jobs; \
-curl -X POST \
-    -H "content-type: application/json" \
-    -H "Authorization: Bearer ${TOKEN}" \
-    -H "timeout: 60" \
-    --data @two_bp.json \
-    ${URL} |jq
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100 10031    0  9907  100   124   3764     47  0:00:02  0:00:02 --:--:--  3811
+% poetry ivcap job-exec two_bp.json
+Creating job 'https://develop.ivcap.net/1/services2/urn:ivcap:service:ac158a1f-dfb4-5dac-bf2e-9bf15e0f2cc7/jobs'
 {
   "$schema": "urn:sd:schema.gene-ontology-term-mapper.1",
   "results": {
     "P12345": [
       {
-        "id": "UniProtKB:P12345!306410578",
+        "assignedBy": "UniProt",
         "geneProductId": "UniProtKB:P12345",
-        "qualifier": "involved_in",
-        "goId": "GO:0006103",
         "goAspect": "biological_process",
         "goEvidence": "ISS",
+        "goId": "GO:0006103",
         "goName": null,
-        "assignedBy": "UniProt",
-        "symbol": "GOT2",
-        "synonyms": null,
-        "name": null,
-        "reference": "GO_REF:0000024"
-      },
-      ...
+        "id": "UniProtKB:P12345!306410578",
+        ...
 ```
 ---
 

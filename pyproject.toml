@@ -15,11 +15,16 @@ dependencies = [
 
 [tool.poetry-plugin-ivcap]
 service-file = "my_app/service.py"
-service-id = "urn:ivcap:service:ac158a1f-dfb4-5dac-bf2e-9bf15e0f2cc7"
 service-type = "lambda"
 port = 8077
+
+#>> you may set the service ID to a speciifc one if adapting an existing one
+# service-id = "urn:ivcap:service:ac158a1f-dfb4-5dac-bf2e-9bf15e0f2cc7"
+
+#>> Uncomment the following if you want to make the service public
 #policy = "urn:ivcap:policy:ivcap.open.metadata"
-# docker
+
+#>> docker overrides
 #docker-run-opts = ["--port", "9999" ]
 
 [build-system]
